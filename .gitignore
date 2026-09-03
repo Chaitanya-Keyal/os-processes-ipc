@@ -1,0 +1,14 @@
+# Build outputs (rebuild with `make`)
+q1_gcd_pipes/gcd_pipes
+q2_resource_monitor/resource_monitor
+q3_logtop/logtop
+q4_belt_shell/belt_shell
+q5_syscall/test_setnice
+*.o
+*.tar.gz
+
+# Editor / OS noise
+.vscode/
+.idea/
+*.swp
+.DS_Store
