@@ -21,7 +21,7 @@ clean:
 
 # Bundle sources, executables, readme and patch for submission.
 dist: all
-	tar czf assignment1_submission.tar.gz README.md Makefile \
+	tar czf assignment1_submission.tar.gz --exclude=.clang-format README.md Makefile \
 	    q1_gcd_pipes q2_resource_monitor q3_logtop q4_belt_shell q5_syscall
 
 .PHONY: all clean dist
