@@ -19,15 +19,14 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#define MAX_LINE 512            /* longest log line, as given in the problem */
+#define MAX_LINE 512 /* longest log line, as given in the problem */
 
 /*
  * Run stages[0] | stages[1] | ... | stages[n-1]. The first stage reads from
  * in_fd; the read end of a pipe attached to the last stage's stdout is
  * returned. Child pids are stored in pids[] so the caller can wait for them.
  */
-static int run_pipeline(char *const *stages[], int n, int in_fd, pid_t pids[])
-{
+static int run_pipeline(char* const* stages[], int n, int in_fd, pid_t pids[]) {
     int prev = in_fd;
 
     for (int i = 0; i < n; i++) {
@@ -43,8 +42,8 @@ static int run_pipeline(char *const *stages[], int n, int in_fd, pid_t pids[])
             exit(EXIT_FAILURE);
         }
         if (pids[i] == 0) {
-            dup2(prev, STDIN_FILENO);       /* read from the previous stage */
-            dup2(fd[1], STDOUT_FILENO);     /* write to the next one */
+            dup2(prev, STDIN_FILENO);   /* read from the previous stage */
+            dup2(fd[1], STDOUT_FILENO); /* write to the next one */
             close(prev);
             close(fd[0]);
             close(fd[1]);
@@ -59,20 +58,17 @@ static int run_pipeline(char *const *stages[], int n, int in_fd, pid_t pids[])
     return prev;
 }
 
-static void copy_to_stdout(int fd)
-{
+static void copy_to_stdout(int fd) {
     char buf[MAX_LINE];
     ssize_t n;
 
     while ((n = read(fd, buf, sizeof buf)) > 0)
-        if (write(STDOUT_FILENO, buf, n) != n)
-            break;
+        if (write(STDOUT_FILENO, buf, n) != n) break;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
     char field[32];
-    char *end;
+    char* end;
     long column;
     int file, out, status = EXIT_SUCCESS;
 
@@ -92,12 +88,12 @@ int main(int argc, char *argv[])
     }
 
     snprintf(field, sizeof field, "-f%ld", column);
-    char *cut[]      = { "cut", "-d", " ", field, NULL };
-    char *sort[]     = { "sort", NULL };
-    char *uniq[]     = { "uniq", "-c", NULL };
-    char *sort_rn[]  = { "sort", "-rn", NULL };
-    char *head[]     = { "head", "-5", NULL };
-    char *const *stages[] = { cut, sort, uniq, sort_rn, head };
+    char* cut[] = {"cut", "-d", " ", field, NULL};
+    char* sort[] = {"sort", NULL};
+    char* uniq[] = {"uniq", "-c", NULL};
+    char* sort_rn[] = {"sort", "-rn", NULL};
+    char* head[] = {"head", "-5", NULL};
+    char* const* stages[] = {cut, sort, uniq, sort_rn, head};
     pid_t pids[5];
 
     out = run_pipeline(stages, 5, file, pids);
@@ -106,8 +102,7 @@ int main(int argc, char *argv[])
     for (int i = 0; i < 5; i++) {
         int st;
         waitpid(pids[i], &st, 0);
-        if (!WIFEXITED(st) || WEXITSTATUS(st) != 0)
-            status = EXIT_FAILURE;
+        if (!WIFEXITED(st) || WEXITSTATUS(st) != 0) status = EXIT_FAILURE;
     }
     return status;
 }
