@@ -18,39 +18,46 @@
 #define __NR_setnice_logged 470 /* number assigned in syscall_64.tbl */
 
 /* Local wrapper around the raw system call. */
-int setnice_logged(int nice_val) {
-    return syscall(__NR_setnice_logged, nice_val);
+int setnice_logged(int nice_val)
+{
+	return syscall(__NR_setnice_logged, nice_val);
 }
 
-static int current_nice(void) {
-    errno = 0;
-    return getpriority(PRIO_PROCESS, 0);
+static int current_nice(void)
+{
+	errno = 0;
+	return getpriority(PRIO_PROCESS, 0);
 }
 
-int main(int argc, char* argv[]) {
-    int wanted = (argc > 1) ? atoi(argv[1]) : 5;
-    int ret;
+int main(int argc, char *argv[])
+{
+	int wanted = (argc > 1) ? atoi(argv[1]) : 5;
+	int ret;
 
-    printf("pid %d: nice before = %d\n", (int)getpid(), current_nice());
+	printf("pid %d: nice before = %d\n", (int)getpid(), current_nice());
 
-    ret = setnice_logged(wanted);
-    if (ret == 0) {
-        printf("Nice value successfully changed.\n");
-    } else {
-        fflush(stdout);
-        perror("setnice_logged failed");
-    }
-    printf("pid %d: nice after  = %d\n", (int)getpid(), current_nice());
+	ret = setnice_logged(wanted);
+	if (ret == 0) {
+		printf("Nice value successfully changed.\n");
+	} else {
+		fflush(stdout);
+		perror("setnice_logged failed");
+	}
+	printf("pid %d: nice after  = %d\n", (int)getpid(), current_nice());
 
-    /* Out-of-range value must be rejected with EINVAL and change nothing. */
-    ret = setnice_logged(42);
-    if (ret == -1 && errno == EINVAL)
-        printf("setnice_logged(42) correctly rejected: %s\n", strerror(errno));
-    else
-        printf("UNEXPECTED: setnice_logged(42) returned %d (errno %d)\n", ret,
-               errno);
-    printf("pid %d: nice still  = %d\n", (int)getpid(), current_nice());
+	/* Out-of-range value must be rejected with EINVAL and change nothing.
+	 */
+	ret = setnice_logged(42);
+	if (ret == -1 && errno == EINVAL)
+		printf("setnice_logged(42) correctly rejected: %s\n",
+		       strerror(errno));
+	else
+		printf(
+		    "UNEXPECTED: setnice_logged(42) returned %d (errno %d)\n",
+		    ret, errno);
+	printf("pid %d: nice still  = %d\n", (int)getpid(), current_nice());
 
-    printf("Check the kernel log with:  sudo dmesg | grep setnice_logged\n");
-    return EXIT_SUCCESS;
+	printf(
+	    "Check the kernel log with:  sudo dmesg | grep setnice_logged\n");
+	return EXIT_SUCCESS;
 }
