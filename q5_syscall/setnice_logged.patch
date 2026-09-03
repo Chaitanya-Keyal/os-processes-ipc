@@ -1,0 +1,76 @@
+diff -ruN a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
+--- a/arch/x86/entry/syscalls/syscall_64.tbl	2026-09-03 23:49:52.239613155 +0530
++++ b/arch/x86/entry/syscalls/syscall_64.tbl	2026-09-03 23:57:24.915671234 +0530
+@@ -390,6 +390,7 @@
+ 464	common	getxattrat		sys_getxattrat
+ 465	common	listxattrat		sys_listxattrat
+ 466	common	removexattrat		sys_removexattrat
++470	common	setnice_logged		sys_setnice_logged
+ 
+ #
+ # Due to a historical design error, certain syscalls are numbered differently
+diff -ruN a/include/linux/syscalls.h b/include/linux/syscalls.h
+--- a/include/linux/syscalls.h	2026-09-03 23:49:52.650059137 +0530
++++ b/include/linux/syscalls.h	2026-09-03 23:57:24.916105259 +0530
+@@ -677,6 +677,7 @@
+ asmlinkage long sys_rt_sigqueueinfo(pid_t pid, int sig, siginfo_t __user *uinfo);
+ asmlinkage long sys_setpriority(int which, int who, int niceval);
+ asmlinkage long sys_getpriority(int which, int who);
++asmlinkage long sys_setnice_logged(int nice_val);
+ asmlinkage long sys_reboot(int magic1, int magic2, unsigned int cmd,
+ 				void __user *arg);
+ asmlinkage long sys_setregid(gid_t rgid, gid_t egid);
+diff -ruN a/kernel/Makefile b/kernel/Makefile
+--- a/kernel/Makefile	2026-09-03 23:49:52.438740413 +0530
++++ b/kernel/Makefile	2026-09-03 23:57:24.915544954 +0530
+@@ -10,7 +10,8 @@
+ 	    extable.o params.o \
+ 	    kthread.o sys_ni.o nsproxy.o \
+ 	    notifier.o ksysfs.o cred.o reboot.o \
+-	    async.o range.o smpboot.o ucount.o regset.o ksyms_common.o
++	    async.o range.o smpboot.o ucount.o regset.o ksyms_common.o \
++	    setnice_logged.o
+ 
+ obj-$(CONFIG_USERMODE_DRIVER) += usermode_driver.o
+ obj-$(CONFIG_MULTIUSER) += groups.o
+diff -ruN a/kernel/setnice_logged.c b/kernel/setnice_logged.c
+--- a/kernel/setnice_logged.c	1970-01-01 05:30:00.000000000 +0530
++++ b/kernel/setnice_logged.c	2026-09-04 04:46:18.358231592 +0530
+@@ -0,0 +1,37 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * CS F372 - Assignment 1, Problem 5
++ * setnice_logged(int nice_val) - custom system call for Linux 6.14
++ *
++ * Copy this file to  <linux-6.14>/kernel/setnice_logged.c  and add
++ * "setnice_logged.o" to obj-y in kernel/Makefile (see setnice_logged.patch).
++ *
++ * Behaviour:
++ *   - nice_val must be in [MIN_NICE, MAX_NICE] = [-20, 19]; otherwise
++ *     -EINVAL is returned and nothing is changed.
++ *   - On success the calling task's nice value is set to nice_val and a
++ *     line is written to the kernel log buffer (see `dmesg | grep setnice_logged`).
++ */
++#include <linux/errno.h>
++#include <linux/kernel.h>
++#include <linux/printk.h>
++#include <linux/sched.h>
++#include <linux/sched/prio.h>
++#include <linux/syscalls.h>
++
++SYSCALL_DEFINE1(setnice_logged, int, nice_val)
++{
++	int old_nice;
++
++	/* Validate before touching anything. */
++	if (nice_val < MIN_NICE || nice_val > MAX_NICE)
++		return -EINVAL;
++
++	old_nice = task_nice(current);
++	set_user_nice(current, nice_val);
++
++	pr_info("setnice_logged: pid=%d comm=%s old_nice=%d new_nice=%d\n",
++		current->pid, current->comm, old_nice, task_nice(current));
++
++	return 0;
++}
