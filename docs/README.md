@@ -14,3 +14,4 @@ message queues are new to you.
 | `04-belt-shell.md`       | Problem 4: a tiny shell with internal and external commands and Ctrl+C handling |
 | `05-syscall.md`          | Problem 5: adding a system call to Linux 6.14            |
 | `demo.md`                | Step-by-step demo script and likely viva questions       |
+| `modifications.md`       | Where to edit for the changes likely to be asked in the viva |
